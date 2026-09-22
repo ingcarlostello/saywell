@@ -6,7 +6,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
     <div
       data-slot="skeleton"
       className={cn(
-        'rounded-md bg-accent outline-none motion-safe:animate-pulse focus-visible:ring-3 focus-visible:ring-ring/60',
+        'rounded-md bg-accent motion-safe:animate-pulse focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring',
         className,
       )}
       {...props}

@@ -9,7 +9,7 @@ export function LiveRegion({ className, ...props }: LiveRegionProps) {
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className={cn('sr-only outline-none focus-visible:ring-3 focus-visible:ring-ring/60', className)}
+      className={cn('sr-only focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring', className)}
       {...props}
     />
   );

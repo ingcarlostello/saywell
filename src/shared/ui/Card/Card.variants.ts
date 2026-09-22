@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority';
 
 export const cardVariants = cva(
-  'rounded-2xl border border-border text-card-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/60',
+  'rounded-2xl border border-border text-card-foreground focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring',
   {
     variants: {
       variant: {

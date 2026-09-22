@@ -90,23 +90,33 @@ for (const [f, code] of source) {
 }
 
 // 7 · Literals duplicated outside src/ must stay in sync (§9.2 cannot reach index.html / vite.config.ts)
+// Fails closed: a literal that can no longer be parsed is an error, not a skipped check.
 const indexHtml = readFileSync('index.html', 'utf8');
-const persistKey = /ui:\s*'([^']+)'/.exec(source.get('src/store/store.constants.ts') ?? '')?.[1];
-if (persistKey && !indexHtml.includes(`'${persistKey}'`)) {
+const storeConstantsFile = 'src/store/store.constants.ts';
+const persistKey = /ui:\s*'([^']+)'/.exec(source.get(storeConstantsFile) ?? '')?.[1];
+if (!persistKey) fail('sync clave de persist', storeConstantsFile, 'no se pudo leer PERSIST_KEYS.ui');
+else if (!indexHtml.includes(`localStorage.getItem('${persistKey}')`)) {
   fail('sync clave de persist', 'index.html', persistKey);
 }
-const preferenceConstants = source.get('src/features/preference/constants/preference.constants.ts') ?? '';
-const themeColors = /THEME_META_COLORS\s*=\s*\{([^}]*)\}/.exec(preferenceConstants)?.[1] ?? '';
+const preferenceConstantsFile = 'src/features/preference/constants/preference.constants.ts';
+const themeColors = /THEME_META_COLORS\s*=\s*\{([^}]*)\}/.exec(source.get(preferenceConstantsFile) ?? '')?.[1] ?? '';
 const darkColor = /dark:\s*'(#[0-9a-fA-F]{6})'/.exec(themeColors)?.[1];
 const lightColor = /light:\s*'(#[0-9a-fA-F]{6})'/.exec(themeColors)?.[1];
-if (darkColor) {
-  if (!indexHtml.includes(darkColor)) fail('sync theme-color oscuro', 'index.html', darkColor);
+if (!darkColor || !lightColor) {
+  fail('sync theme-color', preferenceConstantsFile, 'no se pudo leer THEME_META_COLORS');
+} else {
+  // Each mirror is checked on its own: the dark hex appears twice in index.html.
+  if (!indexHtml.includes(`<meta name="theme-color" content="${darkColor}"`)) {
+    fail('sync theme-color (meta)', 'index.html', darkColor);
+  }
+  if (!indexHtml.includes(`dark ? '${darkColor}' : '${lightColor}'`)) {
+    fail('sync theme-color (boot script)', 'index.html', `${darkColor} / ${lightColor}`);
+  }
   const viteConfig = readFileSync('vite.config.ts', 'utf8');
   if (viteConfig.includes('VitePWA') && !viteConfig.includes(darkColor)) {
     fail('sync theme-color oscuro', 'vite.config.ts', darkColor);
   }
 }
-if (lightColor && !indexHtml.includes(lightColor)) fail('sync theme-color claro', 'index.html', lightColor);
 
 // 8 · Every component folder matches its file name (§4.2)
 for (const f of files) {
