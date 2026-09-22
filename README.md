@@ -1,75 +1,55 @@
-# React + TypeScript + Vite
+# Pronunciador EN→ES
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Entrenador de pronunciación de inglés americano. Escribes una palabra o frase corta en inglés y la app
+te explica cómo se pronuncia con "fonética casera" (letras normales, sin IPA), sílaba por sílaba, con
+una frase de ejemplo y audio del navegador. Interfaz en español o inglés, tema claro/oscuro e instalable
+como PWA.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript 6 + Vite 8, Tailwind CSS v4 + shadcn/ui (Radix), Zustand, zod.
+- Vercel Function `POST /api/pronounce` → DeepSeek (`deepseek-flash`, salida JSON).
+- Rate limit en Upstash Redis: 30 consultas/hora por usuario y 90/hora por IP (la hora empieza con la
+  primera consulta).
+- PWA con `vite-plugin-pwa`.
 
-## React Compiler
+La arquitectura sigue `rules/react-architecture.md`; los overrides y convenciones están en `CLAUDE.md`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requisitos
 
-## Expanding the ESLint configuration
+- Node 22 (recomendado 22.17+ o 24 LTS).
+- Cuenta de Vercel con la integración **Upstash for Redis** (Marketplace) y una API key de DeepSeek.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Variables de entorno (solo servidor)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Variable | Origen |
+|---|---|
+| `DEEPSEEK_API_KEY` | platform.deepseek.com |
+| `DEEPSEEK_MODEL` | opcional; por defecto `deepseek-flash` |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | los inyecta la integración de Upstash (también se aceptan `UPSTASH_REDIS_REST_URL`/`_TOKEN`) |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Ver `.env.example`. Nunca uses el prefijo `VITE_` para secretos.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Desarrollo
 
+```bash
+npm install
+npm run dev          # solo la UI (sin /api)
+npm run dev:full     # UI + /api con `vercel dev` (antes: vercel login, vercel link, vercel pull)
+npm run verify       # lint + check de arquitectura + typecheck + build
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Para probar la PWA: `npm run build && npm run preview`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Despliegue
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Sube el repo a GitHub e impórtalo en Vercel (detecta Vite: build `npm run build`, salida `dist`).
+2. Storage → Upstash for Redis (Free, `us-east-1`, sin prefijo de variables, en los 3 entornos).
+3. Añade `DEEPSEEK_API_KEY` en Settings → Environment Variables y redepliega.
+4. Valida la instalación de la PWA en el dominio de producción.
 
-```
+## Notas
+
+- La ruta de la API es `/api/pronounce` (la especificación original decía `/api/pronunciate`).
+- Privacidad: las palabras que consultas se envían a DeepSeek. El historial solo vive en tu navegador.
+  Las IP se guardan hasheadas y solo durante una hora para el límite de uso.
