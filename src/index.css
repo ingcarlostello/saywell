@@ -7,6 +7,7 @@
 
 /* Light theme: same hues as the mockup, WCAG AA contrast */
 :root {
+  color-scheme: light;
   --radius: 0.75rem;
   --background: oklch(0.975 0.006 255.5);
   --foreground: oklch(0.196 0.038 260.5);
@@ -53,6 +54,7 @@
 
 /* Dark theme: colors measured on context/projectUI.png */
 .dark {
+  color-scheme: dark;
   --background: oklch(0.161 0.03 253.9);
   --foreground: oklch(0.975 0.008 253.9);
   --card: oklch(0.208 0.04 258.3);

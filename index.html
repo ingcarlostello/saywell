@@ -1,10 +1,37 @@
 <!doctype html>
-<html lang="en">
+<html lang="es" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>saywell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Pronunciador</title>
+    <meta
+      name="description"
+      content="Aprende a pronunciar inglés americano con fonética sencilla, sílaba por sílaba."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#0c1829" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Pronunciador" />
+    <script>
+      // Applies the persisted theme and language before React mounts (no theme flash).
+      // 'saywell:ui' mirrors PERSIST_KEYS.ui (src/store/store.constants.ts) and the colors mirror
+      // THEME_META_COLORS (src/features/preference/constants/preference.constants.ts);
+      // scripts/check-arch.mjs fails if they drift apart.
+      (function () {
+        try {
+          var raw = localStorage.getItem('saywell:ui');
+          var state = raw ? JSON.parse(raw).state : null;
+          var dark = !(state && state.theme === 'light');
+          var root = document.documentElement;
+          root.classList.toggle('dark', dark);
+          root.lang = state && state.lang === 'en' ? 'en' : 'es';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#0c1829' : '#ffffff');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
