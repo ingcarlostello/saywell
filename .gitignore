@@ -16,6 +16,9 @@ dev-dist
 # Vercel
 .vercel
 
+# Playwright MCP screenshots/snapshots (local QA artifacts)
+.playwright-mcp
+
 # Env (only the example is tracked)
 .env
 .env.*
