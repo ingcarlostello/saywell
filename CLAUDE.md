@@ -35,6 +35,8 @@ Las reglas viven en `rules/` (decisión del usuario; sustituye a la ruta `.claud
   `shared/utils/cn.utils.ts`.
 - Textos de UI: en el `.constants.ts` de cada entidad como `{ es, en } as const satisfies Localized<X>`.
   El facade elige por `lang` y pasa `labels` a los componentes. No hay librería de i18n.
+- Lo persistido llega sin validar (§12.6 #4): el facade que lee `theme`/`lang` del store los pasa por
+  `toSupportedTheme` / `toSupportedLang` (mismo fallback que el script de `index.html`); el store no valida.
 - `typecheck` = `tsc -b` (el `tsconfig.json` raíz solo tiene references; `tsc --noEmit` no revisa nada).
 - Variantes de `shared/ui` que choquen con atributos nativos se renombran (`inputSize`, no `size`).
 - `api/` (Vercel Functions) queda fuera de `src/`: TS con NodeNext, imports relativos **con `.js`**,

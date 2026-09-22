@@ -26,9 +26,10 @@ export function DropdownMenuContent({ className, sideOffset = 6, ...props }: Dro
         className={cn(
           'z-50 min-w-40 overflow-hidden rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none',
           'focus-visible:outline-none',
-          'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
-          'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
-          'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 motion-reduce:animate-none',
+          // motion-safe gates the animation itself: a motion-reduce override loses on specificity
+          'motion-safe:data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'motion-safe:data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+          'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
           className,
         )}
         {...props}
@@ -46,8 +47,8 @@ export function DropdownMenuRadioItem({ className, children, ...props }: Dropdow
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        'relative flex min-h-11 cursor-default items-center gap-2 rounded-lg py-2 pr-3 pl-9 text-sm outline-none select-none',
-        'focus:bg-accent focus:text-accent-foreground focus-visible:ring-3 focus-visible:ring-ring/60',
+        'relative flex min-h-11 cursor-default items-center gap-2 rounded-lg py-2 pr-3 pl-9 text-sm select-none',
+        'focus:bg-accent focus:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring',
         'data-disabled:pointer-events-none data-disabled:opacity-50',
         className,
       )}

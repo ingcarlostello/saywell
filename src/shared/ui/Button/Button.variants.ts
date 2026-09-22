@@ -3,8 +3,10 @@ import { cva } from 'class-variance-authority';
 export const buttonVariants = cva(
   [
     'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium',
-    'transition-[color,background-color,box-shadow,filter] outline-none select-none',
-    'focus-visible:ring-3 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    'transition-[color,background-color,box-shadow,filter] select-none',
+    // outline-hidden keeps a transparent outline that forced-colors mode paints (box-shadow rings are dropped there)
+    'focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring',
+    'focus-visible:ring-offset-2 focus-visible:ring-offset-background',
     'disabled:pointer-events-none disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-60',
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ],
@@ -22,7 +24,9 @@ export const buttonVariants = cva(
         link: 'px-0 text-primary underline-offset-4 hover:underline',
         segment: [
           'rounded-full text-muted-foreground hover:text-foreground',
-          'aria-pressed:bg-accent aria-pressed:text-foreground aria-pressed:shadow-sm',
+          // Pressed disc >= 3:1 against the control in both themes (WCAG 1.4.11)
+          'aria-pressed:bg-primary aria-pressed:text-primary-foreground',
+          'forced-colors:aria-pressed:bg-[Highlight] forced-colors:aria-pressed:text-[HighlightText]',
         ],
       },
       size: {
