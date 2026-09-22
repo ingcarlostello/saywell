@@ -48,7 +48,8 @@ Las reglas viven en `rules/` (decisión del usuario; sustituye a la ruta `.claud
 ## Comandos
 
 - `npm run dev` — Vite (solo frontend; `/api` no responde)
-- `npm run dev:full` — `vercel dev` (frontend + `/api`; requiere `vercel link` y `vercel pull`)
+- `npm run dev:full` — `vercel dev` (frontend + `/api`; requiere `vercel link`: baja las variables de
+  Development al arrancar, sin `vercel pull`. Nunca crear un `.env` en la raíz: hace que ignore las de la nube)
 - `npm run lint` — ESLint `--max-warnings=0`
 - `npm run lint:arch` — `scripts/check-arch.mjs`
 - `npm run typecheck` — `tsc -b` (app + node + api)
