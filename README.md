@@ -35,9 +35,12 @@ Ver `.env.example`. Nunca uses el prefijo `VITE_` para secretos.
 ```bash
 npm install
 npm run dev          # solo la UI (sin /api)
-npm run dev:full     # UI + /api con `vercel dev` (antes: vercel login, vercel link, vercel pull)
+npm run dev:full     # UI + /api con `vercel dev` (antes, una vez: vercel login y vercel link)
 npm run verify       # lint + check de arquitectura + typecheck + build
 ```
+
+`vercel dev` descarga las variables de Development al arrancar (no hace falta `vercel pull`); si las
+cambias en Vercel, reinícialo. No crees un `.env` en la raíz: si existe, `vercel dev` ignora las de la nube.
 
 Para probar la PWA: `npm run build && npm run preview`.
 

@@ -44,6 +44,8 @@ async function request(method: HttpMethod, url: string, config: ApiRequestConfig
   // Combines the caller's signal with a timeout without AbortSignal.any (missing on iOS < 17.4).
   const controller = new AbortController();
   let timedOut = false;
+  // An already-aborted caller signal must not reach the network: the server would count the request.
+  if (config.signal?.aborted) controller.abort();
   const abortFromCaller = (): void => controller.abort();
   config.signal?.addEventListener(DOM_EVENT.abort, abortFromCaller, { once: true });
   const timer = setTimeout(() => {
