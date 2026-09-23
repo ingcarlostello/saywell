@@ -22,6 +22,8 @@ const stripWrappingQuotes = (value: string): string =>
 const hasNoIpa = (value: string): boolean => !IPA_PATTERN.test(value) && !PHONEMIC_SLASHES_PATTERN.test(value);
 
 // ── Request ──────────────────────────────────────────────────────────────────────────────────────────────
+// CONTRACT: src/features/pronunciation/schemas/pronunciation.schema.ts mirrors this body. Change both
+// sides together.
 
 export const pronounceRequestSchema = z.strictObject({
   word: z.string().transform(collapseWhitespace).pipe(z.string().min(1).max(INPUT.wordMaxLength)),
