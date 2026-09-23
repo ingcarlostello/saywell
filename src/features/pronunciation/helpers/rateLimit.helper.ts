@@ -105,6 +105,18 @@ export function toRateLimitView(status: RateLimitStatus, lang: Lang, texts: Rate
   };
 }
 
+// What the LiveRegion adds to an answer about the quota that answer reported (WCAG 4.1.3): nothing while
+// plenty is left, the count once it runs low, and a plain "none left" at 0. It reads the snapshot of that
+// answer, never the clock, so no tick, other tab or expired window changes a sentence already announced.
+export function toQuotaAnnouncement(snapshot: RateLimitSnapshot, lang: Lang, texts: RateLimitTexts): string | undefined {
+  if (snapshot.remaining === 0) return texts.announceSpent;
+  if (snapshot.remaining > RATE_LIMIT_LOW_THRESHOLD) return undefined;
+  return interpolate(selectPlural(texts.remaining, snapshot.remaining, lang), {
+    remaining: snapshot.remaining,
+    limit: snapshot.limit,
+  });
+}
+
 // Rounded up and never below 1: "espera 0 min" would read as "you can ask now".
 function toMinutesLeft(ms: number): number {
   return Math.max(1, Math.ceil(ms / MS_PER_MINUTE));

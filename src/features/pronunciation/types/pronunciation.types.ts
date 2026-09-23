@@ -67,11 +67,18 @@ export type ShownFailure = Exclude<PronunciationFailure, { kind: typeof FAILURE_
 // ── Request state (the `useReducer` of usePronunciationRequest, per the override of CLAUDE.md §2) ────────
 
 // `lang` is the language the explanations were asked in: switching the UI language afterwards does not
-// re-ask (it would spend quota), so the card keeps rendering in the language of its content.
+// re-ask (it would spend quota), so the card keeps rendering in the language of its content. `rateLimit` is
+// the quota that came with the answer, frozen: it is what the announcement says, whatever happens later.
 export type PronunciationRequestState =
   | { status: typeof REQUEST_STATUS.idle }
   | { status: typeof REQUEST_STATUS.loading; word: string; lang: Lang }
-  | { status: typeof REQUEST_STATUS.ready; word: string; lang: Lang; result: PronunciationResult }
+  | {
+      status: typeof REQUEST_STATUS.ready;
+      word: string;
+      lang: Lang;
+      result: PronunciationResult;
+      rateLimit: RateLimitSnapshot;
+    }
   | { status: typeof REQUEST_STATUS.failed; word: string; failure: ShownFailure };
 
 export type LoadingRequestState = Extract<PronunciationRequestState, { status: typeof REQUEST_STATUS.loading }>;
@@ -80,7 +87,7 @@ export type LoadingRequestState = Extract<PronunciationRequestState, { status: t
 // nothing failed, so it goes back to idle instead of showing a notice.
 export type PronunciationRequestAction =
   | { type: typeof REQUEST_ACTION.start; word: string; lang: Lang }
-  | { type: typeof REQUEST_ACTION.succeed; word: string; result: PronunciationResult }
+  | { type: typeof REQUEST_ACTION.succeed; word: string; result: PronunciationResult; rateLimit: RateLimitSnapshot }
   | { type: typeof REQUEST_ACTION.fail; word: string; failure: ShownFailure }
   | { type: typeof REQUEST_ACTION.cancel; word: string };
 
@@ -114,6 +121,7 @@ export interface ResultTexts {
   announceLoading: string;
   announceReady: string;
   announceNotice: string;
+  announceWithQuota: string;
 }
 
 export interface NoticeTexts {
@@ -163,6 +171,9 @@ export interface PronunciationFormView {
   isSubmitDisabled: boolean;
   canClear: boolean;
   focusRequestId: number;
+  // Bumped by retry: the notice holding the focused Retry button unmounts, so the focus moves to the submit
+  // button, which stays mounted (and busy) next to the answer on its way.
+  submitFocusRequestId: number;
   labels: FormLabels;
   onValueChange: (value: string) => void;
   onSubmit: () => void;
@@ -235,6 +246,11 @@ export interface PronunciationFacade {
 }
 
 // ── Internal hooks of the facade ─────────────────────────────────────────────────────────────────────────
+
+export interface FocusRequestController {
+  id: number;
+  request: () => void;
+}
 
 export interface PronunciationInputController {
   value: string;

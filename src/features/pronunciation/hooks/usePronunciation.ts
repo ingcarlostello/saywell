@@ -1,11 +1,12 @@
 import { toSupportedLang } from '@/shared/utils/i18n.utils';
 import { useUiStore } from '@/store';
 import { INPUT_LIMITS, PRONUNCIATION_TEXTS, REQUEST_STATUS, RESULT_STATUS } from '../constants/pronunciation.constants';
-import { RATE_LIMIT_TICK_MS } from '../constants/rateLimit.constants';
+import { RATE_LIMIT_TEXTS, RATE_LIMIT_TICK_MS } from '../constants/rateLimit.constants';
 import {
   canSubmitWord,
   normalizeWord,
   toAnnouncement,
+  toAnswerQuotaNote,
   toContentLang,
   toCounterView,
   toLastWord,
@@ -13,6 +14,7 @@ import {
   toSubmitLabel,
 } from '../helpers/pronunciation.helper';
 import type { PronunciationFacade, PronunciationResponse } from '../types/pronunciation.types';
+import { useFocusRequest } from './useFocusRequest';
 import { useHistory } from './useHistory';
 import { useNow } from './useNow';
 import { usePronunciationInput } from './usePronunciationInput';
@@ -29,6 +31,7 @@ export function usePronunciation(): PronunciationFacade {
   const request = usePronunciationRequest();
   const rateLimit = useRateLimit({ now, lang });
   const speech = useSpeech();
+  const submitFocus = useFocusRequest();
   const lastWord = toLastWord(request.state);
   const history = useHistory({ now, lang, currentWord: lastWord, selectWord: input.fill });
 
@@ -42,13 +45,8 @@ export function usePronunciation(): PronunciationFacade {
     if (response.result.status === RESULT_STATUS.ok) history.add(response.result.word);
   };
   const submitWord = (word: string): void => {
-    void request.send({
-      word,
-      lang,
-      getClientId: rateLimit.ensureClientId,
-      saveAnswer,
-      saveRateLimited: rateLimit.markExhausted,
-    });
+    const { ensureClientId: getClientId, markExhausted: saveRateLimited } = rateLimit;
+    void request.send({ word, lang, getClientId, saveAnswer, saveRateLimited });
   };
 
   const result = toResultView(request.state, {
@@ -59,8 +57,11 @@ export function usePronunciation(): PronunciationFacade {
       lastWord !== undefined && speech.canSpeak
         ? { label: texts.result.listen, onListen: () => speech.speak(lastWord) }
         : undefined,
+    // The Retry button usually unmounts with its notice: the submit button, which stays, rescues the focus.
     onRetry: () => {
-      if (lastWord !== undefined && !rateLimit.isBlocked) submitWord(lastWord);
+      if (lastWord === undefined || rateLimit.isBlocked) return;
+      submitWord(lastWord);
+      submitFocus.request();
     },
   });
 
@@ -75,6 +76,7 @@ export function usePronunciation(): PronunciationFacade {
       isSubmitDisabled,
       canClear: input.value.length > 0,
       focusRequestId: input.focusRequestId,
+      submitFocusRequestId: submitFocus.id,
       labels: { field: texts.form.field, placeholder: texts.form.placeholder, clear: texts.form.clear },
       onValueChange: input.setValue,
       onSubmit: () => {
@@ -85,6 +87,6 @@ export function usePronunciation(): PronunciationFacade {
     result,
     rateLimit: rateLimit.view,
     history: history.view,
-    announcement: toAnnouncement(result, texts.result),
+    announcement: toAnnouncement(result, texts.result, toAnswerQuotaNote(request.state, lang, RATE_LIMIT_TEXTS[lang])),
   };
 }

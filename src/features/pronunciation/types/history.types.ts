@@ -27,6 +27,9 @@ export interface HistoryItemsContext {
   texts: HistoryTexts;
 }
 
+// Formats a timestamp with one of the Intl option objects of history.constants (cached by identity).
+export type HistoryDateFormatter = (timestamp: number, options: Intl.DateTimeFormatOptions) => string;
+
 export interface HistoryItemData {
   id: string;
   word: string;

@@ -33,6 +33,7 @@ export interface RateLimitTexts {
   exhausted: string;
   infoLabel: string;
   infoText: string;
+  announceSpent: string;
 }
 
 export interface RateLimitView {

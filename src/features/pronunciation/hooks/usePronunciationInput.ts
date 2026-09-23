@@ -1,25 +1,25 @@
 import { useState } from 'react';
 import { truncateWord } from '../helpers/pronunciation.helper';
 import type { PronunciationInputController } from '../types/pronunciation.types';
+import { useFocusRequest } from './useFocusRequest';
 
-// The field is shared by the form and the history. `focusRequestId` grows each time the field must take the
-// focus (a history pick, the clear button, which disappears once the field is empty).
+// The field is shared by the form and the history. It asks for the focus after a history pick and after the
+// clear button, which disappears once the field is empty.
 export function usePronunciationInput(): PronunciationInputController {
   const [value, setValue] = useState('');
-  const [focusRequestId, setFocusRequestId] = useState(0);
-  const requestFocus = (): void => setFocusRequestId((id) => id + 1);
+  const focus = useFocusRequest();
 
   return {
     value,
-    focusRequestId,
+    focusRequestId: focus.id,
     setValue: (next) => setValue(truncateWord(next)),
     clear: () => {
       setValue('');
-      requestFocus();
+      focus.request();
     },
     fill: (word) => {
       setValue(truncateWord(word));
-      requestFocus();
+      focus.request();
     },
   };
 }
