@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { useStorageSync } from '@/shared/hooks/useStorageSync';
 import { RATE_LIMIT_PERSIST, RATE_LIMIT_TEXTS, RATE_LIMIT_TONE } from '../constants/rateLimit.constants';
 import {
   getRateLimitStatus,
@@ -12,7 +13,6 @@ import {
 } from '../helpers/rateLimit.helper';
 import { useRateLimitStore } from '../store/rateLimitStore';
 import type { RateLimitController, RateLimitSnapshot, UseRateLimitOptions } from '../types/rateLimit.types';
-import { useStorageSync } from './useStorageSync';
 
 export function useRateLimit({ now, lang }: UseRateLimitOptions): RateLimitController {
   const { storedSnapshot, setClientId, setSnapshot, clearSnapshot } = useRateLimitStore(
@@ -28,9 +28,15 @@ export function useRateLimit({ now, lang }: UseRateLimitOptions): RateLimitContr
   const status = getRateLimitStatus(snapshot, now);
   const isImpossible = isImpossibleSnapshot(snapshot, now);
 
-  // Deleted, not just ignored: an impossible window would block again once the wrong clock caught up.
+  // Deleted, not just ignored: an impossible window would block again once the wrong clock caught up. A refused
+  // localStorage write must not throw out of the effect (it would unmount the app): memory is already cleared.
   useEffect(() => {
-    if (isImpossible) clearSnapshot();
+    if (!isImpossible) return;
+    try {
+      clearSnapshot();
+    } catch (error) {
+      reportError(error);
+    }
   }, [isImpossible, clearSnapshot]);
 
   // Called from the submit handler, never during render: the first question of a device creates its id.
@@ -39,7 +45,12 @@ export function useRateLimit({ now, lang }: UseRateLimitOptions): RateLimitContr
     const clientId = toSupportedClientId(useRateLimitStore.getState().clientId);
     if (clientId) return clientId;
     const created = crypto.randomUUID();
-    setClientId(created);
+    // Persisting it is best effort: zustand keeps it in memory even when localStorage refuses the write.
+    try {
+      setClientId(created);
+    } catch (error) {
+      reportError(error);
+    }
     return created;
   };
   // The previous snapshot, the clock and the limit are read when the answer arrives, not at the last render.

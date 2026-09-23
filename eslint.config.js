@@ -36,6 +36,8 @@ const UI_PATTERNS = [
     group: [
       '**/store/**', '**/*.store', '**/*Store', '**/*.slice', '**/*Slice', '**/*.selectors',
       '**/*.services', '**/*.api', '**/*.adapter', '@/store', '@/store/*',
+      // `paths` below only matches the bare module name: subpaths such as zustand/react/shallow need a pattern
+      'zustand/*', 'react-redux/*', '@tanstack/react-query/*',
     ],
     message: UI_MSG,
   },

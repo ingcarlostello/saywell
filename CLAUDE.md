@@ -12,8 +12,9 @@ Las reglas viven en `rules/` (decisión del usuario; sustituye a la ruta `.claud
 2. **Sin TanStack Query ni RTK Query.** Las reglas (R) de queries no aplican. El estado de una petición
    vive en un `useReducer` de un hook interno del facade, nunca en un store (§8.1).
 3. **Zustand solo en:** `src/store/ui` (tema, idioma) y `features/pronunciation/store` (historial y
-   snapshot del rate limit + clientId). El snapshot `{limit, remaining, resetAt}` que devuelve el servidor
-   se cachea por decisión explícita del usuario (§13.5 presupone una caché de queries).
+   snapshot del rate limit + clientId). El snapshot `{limit, remaining, resetAt}` (el adapter lo deriva del
+   `{limit, remaining, resetInMs}` que devuelve el servidor) se cachea por decisión explícita del usuario
+   (§13.5 presupone una caché de queries).
 4. **Modelo DeepSeek:** `deepseek-chat` se retiró el 2026-07-24. Se usa `deepseek-flash` con
    `thinking: {type: 'disabled'}`; se puede cambiar con la env `DEEPSEEK_MODEL`.
 5. **Rate limit:** 30/h por usuario (`X-Client-Id`) + techo de 90/h por IP; la ventana empieza con la

@@ -1,7 +1,9 @@
 import { useShallow } from 'zustand/react/shallow';
 import { LANGS } from '@/shared/constants/i18n.constants';
+import { useStorageSync } from '@/shared/hooks/useStorageSync';
 import { toSupportedLang } from '@/shared/utils/i18n.utils';
 import { THEME, useUiStore } from '@/store';
+import { PERSIST_KEYS } from '@/store/store.constants';
 import { LANGUAGE_OPTIONS, PREFERENCE_TEXTS } from '../constants/preference.constants';
 import { toLanguageTriggerLabel, toSupportedTheme } from '../helpers/preference.helper';
 import type { PreferenceFacade } from '../types/preference.types';
@@ -11,6 +13,8 @@ export function usePreference(): PreferenceFacade {
   const { storedTheme, storedLang, setTheme, setLang } = useUiStore(
     useShallow((s) => ({ storedTheme: s.theme, storedLang: s.lang, setTheme: s.setTheme, setLang: s.setLang })),
   );
+  // The PWA window and a browser tab share the setting: without it, a change in one is overwritten by the other.
+  useStorageSync(PERSIST_KEYS.ui, useUiStore);
   const theme = toSupportedTheme(storedTheme);
   const lang = toSupportedLang(storedLang);
   useDocumentPreference({ theme, lang });

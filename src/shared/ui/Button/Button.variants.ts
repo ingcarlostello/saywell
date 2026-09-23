@@ -21,7 +21,6 @@ export const buttonVariants = cva(
         ],
         outline: 'border border-border bg-transparent hover:bg-accent hover:text-accent-foreground',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'px-0 text-primary underline-offset-4 hover:underline',
         segment: [
           'rounded-full text-muted-foreground hover:text-foreground',
           // Pressed disc >= 3:1 against the control in both themes (WCAG 1.4.11)

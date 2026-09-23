@@ -19,7 +19,11 @@ function getScripts(env: ServerEnv): RateLimitScripts {
     url: env.KV_REST_API_URL,
     token: env.KV_REST_API_TOKEN,
     // Fail closed fast: the SDK default is 5 retries (~4 s) and no timeout at all.
-    retry: { retries: RATE_LIMIT.redisRetries, backoff: (attempt) => attempt * RATE_LIMIT.redisRetryBackoffMs },
+    // The SDK counts retries from 0: +1 so the first one waits too (100/200 ms), not 0/100 ms.
+    retry: {
+      retries: RATE_LIMIT.redisRetries,
+      backoff: (retryIndex) => (retryIndex + 1) * RATE_LIMIT.redisRetryBackoffMs,
+    },
     // A factory, never a static signal: an aborted static signal would poison every later request.
     signal: () => AbortSignal.timeout(RATE_LIMIT.redisTimeoutMs),
     enableAutoPipelining: false,

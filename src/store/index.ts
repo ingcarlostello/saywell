@@ -1,3 +1,3 @@
-export { THEME, THEMES } from './store.constants';
+export { THEME } from './store.constants';
 export { useUiStore } from './ui/uiStore';
-export type { Theme, UiStore } from './ui/uiStore.types';
+export type { Theme } from './ui/uiStore.types';
