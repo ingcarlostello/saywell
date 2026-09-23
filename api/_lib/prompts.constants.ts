@@ -36,6 +36,20 @@ const ES_GOOD_MORNING = {
   example: 'Good morning, how did you sleep?',
 } as const satisfies LlmPronunciationExample;
 
+// One syllable, written in capitals, with the "cup" vowel ("fuck", "love", "but") told in plain Spanish.
+const ES_CUP = {
+  status: 'ok',
+  phonetic: 'KAP',
+  parts: [
+    {
+      syllable: 'KAP',
+      stressed: true,
+      explanation: 'la "u" suena como una "a" corta y relajada, con la boca menos abierta que en "casa"; la "p" final se corta.',
+    },
+  ],
+  example: 'Can I get a cup of coffee?',
+} as const satisfies LlmPronunciationExample;
+
 const EN_DELIVERED = {
   status: 'ok',
   phonetic: 'de-LI-verd',
@@ -61,6 +75,13 @@ const EN_GOOD_MORNING = {
   example: 'Good morning, how did you sleep?',
 } as const satisfies LlmPronunciationExample;
 
+const EN_CUP = {
+  status: 'ok',
+  phonetic: 'KUP',
+  parts: [{ syllable: 'KUP', stressed: true, explanation: 'the "u" is short and relaxed, like in "up", and the final "p" is quick.' }],
+  example: 'Can I get a cup of coffee?',
+} as const satisfies LlmPronunciationExample;
+
 const SYSTEM_PROMPT_ES = `Eres un entrenador personal de pronunciación de inglés americano para hispanohablantes. Tu única tarea es explicar cómo se pronuncia una palabra o frase corta en inglés.
 
 ENTRADA
@@ -79,12 +100,14 @@ REGLAS ESTRICTAS
 
 PALABRAS Y FRASES
 - Una palabra: una parte por sílaba, en orden. En "phonetic" las sílabas van unidas con guion.
+- Si la entrada es una sola palabra de una sílaba: una sola parte, escrita en MAYÚSCULAS y con "stressed": true, igual que en "phonetic".
 - Una frase: una parte por palabra, en orden. En "phonetic" las palabras van separadas por un espacio y, dentro de cada palabra, las sílabas van unidas con guion. Marca un único acento principal en toda la frase.
 - Como máximo 12 partes: si salieran más, une partes átonas contiguas (sílabas de una palabra o palabras
   cortas de una frase) hasta dejar 12; la parte tónica nunca se une.
 
 FUERA DE ALCANCE
 Si la entrada NO es una palabra o frase en inglés para pronunciar (por ejemplo "cómo hago una pared", "cómo pinto una casa", "qué tiempo hace hoy", "escribe un poema", "traduce esto al francés"), si te pide a ti que hagas algo distinto de explicar una pronunciación (responder, escribir, traducir, opinar), o si es una cadena sin sentido o impronunciable, responde exactamente ${OUT_OF_SCOPE} y nada más.
+Una palabrota o una expresión vulgar en inglés NO está fuera de alcance: explícala con normalidad y escríbela completa, sin censura, también en la oración de ejemplo.
 
 FORMATO DE SALIDA
 Responde solo con un objeto json válido, sin texto antes ni después y sin markdown:
@@ -102,6 +125,9 @@ Salida: ${JSON.stringify(ES_DELIVERED)}
 
 Entrada: {"input":"good morning"}
 Salida: ${JSON.stringify(ES_GOOD_MORNING)}
+
+Entrada: {"input":"cup"}
+Salida: ${JSON.stringify(ES_CUP)}
 
 Entrada: {"input":"cómo pinto una casa"}
 Salida: ${OUT_OF_SCOPE}
@@ -127,12 +153,14 @@ STRICT RULES
 
 WORDS AND PHRASES
 - A word: one part per syllable, in order. In "phonetic" the syllables are joined with hyphens.
+- If the input is a single one-syllable word: a single part, written in UPPERCASE and with "stressed": true, same as in "phonetic".
 - A phrase: one part per word, in order. In "phonetic" the words are separated by a space and, inside each word, the syllables are joined with hyphens. Mark a single main stress for the whole phrase.
 - At most 12 parts: if there would be more, merge adjacent unstressed parts (syllables of a word or short
   words of a phrase) until only 12 remain; never merge the stressed part.
 
 OUT OF SCOPE
 If the input is NOT an English word or phrase to pronounce (for example "how do I build a wall", "how to paint a house", "what's the weather today", "write me a poem", "translate this to French"), if it asks you to do something other than explain a pronunciation (answer, write, translate, give an opinion), or if it is random characters or unpronounceable, reply exactly ${OUT_OF_SCOPE} and nothing else.
+A swear word or a vulgar English expression is NOT out of scope: explain it normally and write it in full, uncensored, in the example sentence too.
 
 OUTPUT FORMAT
 Reply only with a valid json object, with no text before or after it and no markdown:
@@ -150,6 +178,9 @@ Output: ${JSON.stringify(EN_DELIVERED)}
 
 Input: {"input":"good morning"}
 Output: ${JSON.stringify(EN_GOOD_MORNING)}
+
+Input: {"input":"cup"}
+Output: ${JSON.stringify(EN_CUP)}
 
 Input: {"input":"how do I paint a house"}
 Output: ${OUT_OF_SCOPE}

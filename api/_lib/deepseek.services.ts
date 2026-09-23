@@ -13,15 +13,18 @@ import {
   JSON_MEDIA_TYPE,
   JSON_RESPONSE_FORMAT,
   LOG_EVENT,
+  LOGGED_ISSUES_MAX,
   MESSAGE_ROLE,
   PART_ID_PREFIX,
   RESULT_STATUS,
+  SCHEMA_ISSUE,
   THINKING_DISABLED,
   TIMEOUT_ERROR_NAME,
   UPSTREAM_ERROR_KIND,
 } from './pronounce.constants.js';
 import { deepseekEnvelopeSchema, llmResultSchema } from './pronounce.schema.js';
 import type {
+  LlmIssue,
   LlmResult,
   PronunciationInput,
   PronunciationResult,
@@ -41,10 +44,24 @@ export class UpstreamError extends Error {
 
 type AttemptOutcome =
   | { type: typeof ATTEMPT_OUTCOME.result; result: LlmResult }
-  | { type: typeof ATTEMPT_OUTCOME.retry; reason: string }
+  | { type: typeof ATTEMPT_OUTCOME.retry; reason: string; issues?: string }
   | { type: typeof ATTEMPT_OUTCOME.fail; reason: string };
 
 const isTimeout = (error: unknown): boolean => error instanceof Error && error.name === TIMEOUT_ERROR_NAME;
+
+const LOGGABLE_ISSUE_MESSAGES: ReadonlySet<string> = new Set(Object.values(SCHEMA_ISSUE));
+
+// Which rules a rejected answer broke ("parts.0.syllable:stress_case"), never its content: zod drops the
+// input from final issues, paths are schema keys and indexes, and only our own refinement messages are printed.
+function toIssueSummary(issues: readonly LlmIssue[]): string {
+  return issues
+    .slice(0, LOGGED_ISSUES_MAX)
+    .map((issue) => {
+      const rule = LOGGABLE_ISSUE_MESSAGES.has(issue.message) ? issue.message : issue.code;
+      return `${issue.path.map(String).join('.')}:${rule}`;
+    })
+    .join(',');
+}
 
 function toRequestBody(env: ServerEnv, input: PronunciationInput): string {
   return JSON.stringify({
@@ -74,7 +91,7 @@ function toOutcome(content: string): AttemptOutcome {
   const result = llmResultSchema.safeParse(data);
   return result.success
     ? { type: ATTEMPT_OUTCOME.result, result: result.data }
-    : { type: ATTEMPT_OUTCOME.retry, reason: 'invalid_result' };
+    : { type: ATTEMPT_OUTCOME.retry, reason: 'invalid_result', issues: toIssueSummary(result.error.issues) };
 }
 
 // One call to DeepSeek. Throws UpstreamError('timeout') when the shared deadline fires, headers or body.
@@ -153,7 +170,8 @@ export async function fetchPronunciation(env: ServerEnv, input: PronunciationInp
   for (let attemptNumber = 1; ; attemptNumber += 1) {
     const outcome = await attempt(env.DEEPSEEK_API_KEY, body, deadline, attemptNumber);
     if (outcome.type === ATTEMPT_OUTCOME.result) return toPronunciationResult(outcome.result, input.word);
-    logWarning(LOG_EVENT.deepseekFailed, { attempt: attemptNumber, outcome: outcome.type, reason: outcome.reason });
+    const issues = outcome.type === ATTEMPT_OUTCOME.retry ? outcome.issues : undefined;
+    logWarning(LOG_EVENT.deepseekFailed, { attempt: attemptNumber, outcome: outcome.type, reason: outcome.reason, issues });
 
     const budgetLeftMs = DEEPSEEK.timeoutMs - (Date.now() - startedAt) - DEEPSEEK.retryDelayMs;
     const canRetry =

@@ -16,6 +16,8 @@ export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE];
 
 export type LlmResult = z.infer<typeof llmResultSchema>;
 
+export type LlmIssue = z.core.$ZodIssue;
+
 // Shape the prompt examples are checked against (`satisfies`), before the schema transforms.
 export type LlmPronunciationExample = z.input<typeof llmPronunciationSchema>;
 
