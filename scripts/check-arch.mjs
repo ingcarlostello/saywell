@@ -89,9 +89,10 @@ for (const [f, code] of source) {
   }
 }
 
-// 7 · Literals duplicated outside src/ must stay in sync (§9.2 cannot reach index.html / vite.config.ts)
+// 7 · Literals duplicated outside src/ must stay in sync (§9.2 cannot reach index.html and the root configs)
 // Fails closed: a literal that can no longer be parsed is an error, not a skipped check.
 const indexHtml = readFileSync('index.html', 'utf8');
+const viteConfig = readFileSync('vite.config.ts', 'utf8');
 const storeConstantsFile = 'src/store/store.constants.ts';
 const persistKey = /ui:\s*'([^']+)'/.exec(source.get(storeConstantsFile) ?? '')?.[1];
 if (!persistKey) fail('sync clave de persist', storeConstantsFile, 'no se pudo leer PERSIST_KEYS.ui');
@@ -112,10 +113,14 @@ if (!darkColor || !lightColor) {
   if (!indexHtml.includes(`dark ? '${darkColor}' : '${lightColor}'`)) {
     fail('sync theme-color (boot script)', 'index.html', `${darkColor} / ${lightColor}`);
   }
-  const viteConfig = readFileSync('vite.config.ts', 'utf8');
-  if (viteConfig.includes('VitePWA') && !viteConfig.includes(darkColor)) {
-    fail('sync theme-color oscuro', 'vite.config.ts', darkColor);
-  }
+  if (!viteConfig.includes(`theme_color: '${darkColor}'`)) fail('sync theme-color (manifest)', 'vite.config.ts', darkColor);
+}
+// The manifest's background_color (splash screen) is also the background of the opaque icons.
+const pwaAssetsConfigFile = 'pwa-assets.config.ts';
+const manifestBackground = /background_color:\s*'(#[0-9a-fA-F]{6})'/.exec(viteConfig)?.[1];
+if (!manifestBackground) fail('sync fondo de los iconos', 'vite.config.ts', 'no se pudo leer background_color');
+else if (!readFileSync(pwaAssetsConfigFile, 'utf8').includes(`ICON_BACKGROUND = '${manifestBackground}'`)) {
+  fail('sync fondo de los iconos', pwaAssetsConfigFile, manifestBackground);
 }
 
 // 7b · Limits duplicated across the api/ ↔ src/ contract (`// CONTRACT:` on both sides). Also fails closed:

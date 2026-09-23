@@ -42,7 +42,14 @@ npm run verify       # lint + check de arquitectura + typecheck + build
 `vercel dev` descarga las variables de Development al arrancar (no hace falta `vercel pull`); si las
 cambias en Vercel, reinícialo. No crees un `.env` en la raíz: si existe, `vercel dev` ignora las de la nube.
 
-Para probar la PWA: `npm run build && npm run preview`.
+### PWA
+
+- El service worker solo existe en el build: `npm run build && npm run preview`. Se actualiza solo: la versión
+  nueva se descarga en segundo plano al abrir la app y se ve en el arranque siguiente, sin recargar una página
+  abierta. Una app instalada que solo se reanuda no busca actualizaciones.
+- Iconos: el logo es `public/favicon.svg`. Si lo cambias, ejecuta `npm run generate-pwa-assets` y commitea los
+  PNG y el `favicon.ico` que escribe en `public/`.
+- `/api` nunca se cachea: sin conexión se ve la app, pero las consultas necesitan red.
 
 ## Despliegue
 

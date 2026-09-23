@@ -17,8 +17,8 @@ export const INSTALLED_PROMPT_STATE = {
   status: INSTALL_PROMPT_STATUS.installed,
 } as const satisfies InstallPromptState;
 
-// The manifest (phase 12) declares display: 'standalone' and no display_override. `fullscreen` stays out: it
-// also matches a normal tab while the Fullscreen API is active.
+// The manifest (vite.config.ts) declares display: 'standalone' and no display_override. `fullscreen` stays out:
+// it also matches a normal tab while the Fullscreen API is active.
 export const STANDALONE_QUERY = '(display-mode: standalone)';
 
 // iPadOS Safari identifies as a Mac; only touch tells them apart (Macs report 0 touch points).
