@@ -3,7 +3,8 @@ import { LANGS } from '@/shared/constants/i18n.constants';
 import { INPUT_LIMITS, RESULT_STATUS } from '../constants/pronunciation.constants';
 import { rateLimitSnapshotDtoSchema } from './rateLimit.schema';
 
-// CONTRACT: mirrors `pronounceRequestSchema` and the response bodies of api/_lib/pronounce.schema.ts.
+// CONTRACT: mirrors `pronounceRequestSchema` and `pronounceOkBodySchema` (the 200 body) of
+// api/_lib/pronounce.schema.ts; the 429 and error bodies are never read here.
 // Vercel compiles api/ without the @/ alias, so the contract is duplicated on purpose. Change both sides
 // together. Only the response schemas run here: the request one is the source of `PronounceRequestDto`
 // (§14.2 forbids declaring a DTO by hand) and documents the half of the contract the client writes.

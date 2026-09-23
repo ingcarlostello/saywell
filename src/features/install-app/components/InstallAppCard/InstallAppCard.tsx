@@ -6,7 +6,7 @@ import type { InstallAppCardProps } from './InstallAppCard.types';
 // events) and no live region: its arrival is not announced. Same insets as the history panel above it.
 export function InstallAppCard({ title, description, children }: InstallAppCardProps) {
   return (
-    <Card variant="promo" className="flex items-start gap-3 p-4 lg:p-5">
+    <Card variant="promo" padding="none" className="flex items-start gap-3 p-4 lg:p-5">
       <span
         aria-hidden
         className="flex size-9 shrink-0 items-center justify-center rounded-full bg-promo text-promo-foreground"

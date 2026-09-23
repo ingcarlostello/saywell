@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { useStorageSync } from '@/shared/hooks/useStorageSync';
 import { HISTORY_PERSIST, HISTORY_TEXTS, HISTORY_VIEW } from '../constants/history.constants';
 import { addHistoryEntry, canToggleHistory, toHistoryItems, toSupportedHistory } from '../helpers/history.helper';
 import { useHistoryStore } from '../store/historyStore';
 import type { HistoryController, UseHistoryOptions } from '../types/history.types';
-import { useStorageSync } from './useStorageSync';
 
 export function useHistory({ now, lang, currentWord, selectWord }: UseHistoryOptions): HistoryController {
   const { storedEntries, setEntries } = useHistoryStore(

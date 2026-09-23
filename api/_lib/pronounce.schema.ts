@@ -137,8 +137,10 @@ export const consumeReplySchema = z.tuple([
 export const refundReplySchema = luaFlagSchema;
 
 // ── Response bodies ──────────────────────────────────────────────────────────────────────────────────────
-// CONTRACT: src/features/pronunciation/schemas/* mirrors these bodies (Vercel compiles api/ without the
-// @/ alias, so the schemas are duplicated on purpose). Change both sides together.
+// CONTRACT: src/features/pronunciation/schemas/* mirrors rateLimitSnapshotSchema, pronunciationResultSchema and
+// pronounceOkBodySchema, the 200 body (Vercel compiles api/ without the @/ alias, so the schemas are duplicated
+// on purpose). Change both sides together. rateLimitedBodySchema and errorBodySchema have no client mirror: the
+// client decides on the status and Retry-After only.
 
 export const rateLimitSnapshotSchema = z.object({
   limit: z.number().int().positive(),

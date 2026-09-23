@@ -17,7 +17,7 @@ La arquitectura sigue `rules/react-architecture.md`; los overrides y convencione
 
 ## Requisitos
 
-- Node 22 (recomendado 22.17+ o 24 LTS).
+- Node 22 (22.17+ recomendado; `engines` fija 22.x, también en Vercel).
 - Cuenta de Vercel con la integración **Upstash for Redis** (Marketplace) y una API key de DeepSeek.
 
 ## Variables de entorno (solo servidor)

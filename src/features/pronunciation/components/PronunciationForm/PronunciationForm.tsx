@@ -5,7 +5,7 @@ import type { PronunciationFormProps } from './PronunciationForm.types';
 // it focusable, so the form can still fire while the button reads as unavailable.
 export function PronunciationForm({ field, submit, onSubmit }: PronunciationFormProps) {
   return (
-    <Card variant="elevated" className="p-4 sm:p-5">
+    <Card variant="elevated" padding="none" className="p-4 sm:p-5">
       <form
         role="search"
         noValidate

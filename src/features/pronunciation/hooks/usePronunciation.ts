@@ -39,9 +39,15 @@ export function usePronunciation(): PronunciationFacade {
   // aria-disabled keeps the button focusable, so the guard lives here and not only in the markup.
   const isSubmitDisabled = isSubmitting || rateLimit.isBlocked || !canSubmitWord(input.value);
 
-  // Both `ok` and `out_of_scope` spend quota and refresh the snapshot; only `ok` enters the history.
+  // Both `ok` and `out_of_scope` spend quota and refresh the snapshot; only `ok` enters the history. The two
+  // writes are independent: a refused localStorage write of the snapshot is reported here and still lets the
+  // word into the history, whose own refused write reaches the request's saveSafely.
   const saveAnswer = (response: PronunciationResponse): void => {
-    rateLimit.record(response.rateLimit);
+    try {
+      rateLimit.record(response.rateLimit);
+    } catch (error) {
+      reportError(error);
+    }
     if (response.result.status === RESULT_STATUS.ok) history.add(response.result.word);
   };
   const submitWord = (word: string): void => {

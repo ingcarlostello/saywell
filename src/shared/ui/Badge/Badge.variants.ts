@@ -8,7 +8,7 @@ export const badgeVariants = cva(
   {
     variants: {
       variant: {
-        phonetic: 'rounded-xl border-phonetic-border bg-phonetic text-phonetic-foreground',
+        tinted: 'rounded-xl border-tinted-border bg-tinted text-tinted-foreground',
         sky: 'bg-pill-sky text-pill-sky-foreground',
         indigo: 'bg-pill-indigo text-pill-indigo-foreground',
         emerald: 'bg-pill-emerald text-pill-emerald-foreground',
