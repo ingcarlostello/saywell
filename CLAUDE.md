@@ -66,6 +66,9 @@ exports, `focus-visible` en la clase base, tamaños táctiles ≥44 px, podar lo
 
 ## PWA
 
-El service worker solo existe en build: se prueba con `npm run build && npm run preview`. La instalación
-se valida en el dominio de producción (los previews protegidos devuelven 401 en el manifest; por LAN en
-http no hay service worker ni `crypto.randomUUID`).
+Los iconos salen de `public/favicon.svg` con `npm run generate-pwa-assets` (config en `pwa-assets.config.ts`) y
+los PNG y el `favicon.ico` se commitean. El service worker solo existe en build: se prueba con
+`npm run build && npm run preview`. Nunca borrar ni renombrar `/sw.js`: los clientes instalados se quedarían en la
+última versión. Para retirar la PWA se despliega `VitePWA({ selfDestroying: true })` y se mantiene meses.
+La instalación se valida en el dominio de producción (los previews protegidos devuelven 401 en el manifest; por
+LAN en http no hay service worker ni `crypto.randomUUID`).

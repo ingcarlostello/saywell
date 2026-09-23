@@ -2,7 +2,7 @@ import { useId } from 'react';
 import type { AppLogoProps } from './AppLogo.types';
 
 // Decorative microphone mark (the brand name next to it carries the meaning). The viewBox is cropped to
-// the glyph (32 × 44), so size it at that aspect ratio.
+// the glyph (32 × 44), so size it at that aspect ratio. public/favicon.svg repeats the glyph with fixed colors.
 export function AppLogo(props: AppLogoProps) {
   const gradientId = useId();
   const paint = `url(#${gradientId})`;
