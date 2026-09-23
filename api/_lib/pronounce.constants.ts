@@ -98,13 +98,22 @@ export const PRONUNCIATION_LIMITS = {
 
 export const PART_ID_PREFIX = 'p';
 
+// Messages of llmResultSchema's own refinements: the only issue messages the logs may print.
+export const SCHEMA_ISSUE = { ipa: 'ipa', stressCase: 'stress_case', noStress: 'no_stress' } as const;
+
+// A rejected answer logs at most this many broken rules (path:rule), never its content.
+export const LOGGED_ISSUES_MAX = 5;
+
 // "Fonética casera": plain letters only. The IPA blocks plus the IPA letters outside them: æ/ð (Latin-1),
-// ŋ (Latin Ext-A), θ (Greek).
-export const IPA_PATTERN = /[ɐ-˿ᴀ-ᶿæðŋθ]/u;
+// ŋ (Latin Ext-A), θ (Greek). Case-insensitive: the capital forms of IPA letters live in other Latin blocks
+// (ʌ → Ʌ U+0245, ɔ → Ɔ U+0186, ə → Ə U+018F) and would pass as plain letters.
+export const IPA_PATTERN = /[ɐ-˿ᴀ-ᶿæðŋθ]/iu;
 // Phonemic notation (/ei/, [dog]), not a plain slash: "t/d/r", "24/7" and "km/h" are legitimate explanations.
 export const PHONEMIC_SLASHES_PATTERN = /(?<!\p{L})\/[^/\s]+\/(?!\p{L})|\[[^\]\s]+\]/u;
 export const PHONETIC_PATTERN = /^[\p{Script=Latin}\p{M}\s'’-]+$/u;
 export const UPPERCASE_PATTERN = /\p{Lu}/u;
+// A hyphen or a space: the text holds more than one syllable or word.
+export const MULTI_SEGMENT_PATTERN = /[\s-]/u;
 
 export const DEEPSEEK = {
   url: 'https://api.deepseek.com/chat/completions',

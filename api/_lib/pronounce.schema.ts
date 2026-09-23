@@ -5,10 +5,12 @@ import {
   IPA_PATTERN,
   LANGS,
   LATIN_LETTER_PATTERN,
+  MULTI_SEGMENT_PATTERN,
   PHONEMIC_SLASHES_PATTERN,
   PHONETIC_PATTERN,
   PRONUNCIATION_LIMITS,
   RESULT_STATUS,
+  SCHEMA_ISSUE,
   SUPPORTED_INPUT_PATTERN,
   UPPERCASE_PATTERN,
   WHITESPACE_RUN_PATTERN,
@@ -20,6 +22,30 @@ const collapseWhitespace = (value: string): string => value.replace(WHITESPACE_R
 const stripWrappingQuotes = (value: string): string =>
   value.trim().replace(WRAPPING_QUOTES_PATTERN, WRAPPED_CONTENT_GROUP);
 const hasNoIpa = (value: string): boolean => !IPA_PATTERN.test(value) && !PHONEMIC_SLASHES_PATTERN.test(value);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+const toCapitalsIfNone = (value: string): string => (UPPERCASE_PATTERN.test(value) ? value : value.toUpperCase());
+
+// A one-syllable word is stressed by definition, yet the model often writes it in lowercase ("tot" for
+// "taught") and the stress_case rule rejected it on every attempt. Its capitals are what shows the stress, so
+// they are restored instead of discarding a correct answer. Only for a single part of one segment: a wrongly
+// merged "he-lo" or "gud mor-ning" keeps failing and is retried, and text that already has capitals is left
+// as it is.
+function toSinglePartStress(answer: unknown): unknown {
+  if (!isRecord(answer) || answer.status !== RESULT_STATUS.ok || typeof answer.phonetic !== 'string') return answer;
+  const { parts } = answer;
+  if (!Array.isArray(parts) || parts.length !== 1) return answer;
+  const part: unknown = parts[0];
+  if (!isRecord(part) || typeof part.syllable !== 'string') return answer;
+  if (MULTI_SEGMENT_PATTERN.test(part.syllable.trim()) || MULTI_SEGMENT_PATTERN.test(answer.phonetic.trim())) {
+    return answer;
+  }
+  return {
+    ...answer,
+    phonetic: toCapitalsIfNone(answer.phonetic),
+    parts: [{ ...part, syllable: toCapitalsIfNone(part.syllable), stressed: true }],
+  };
+}
 
 // ── Request ──────────────────────────────────────────────────────────────────────────────────────────────
 // CONTRACT: src/features/pronunciation/schemas/pronunciation.schema.ts mirrors this body. Change both
@@ -38,7 +64,7 @@ export const supportedWordSchema = z.string().regex(SUPPORTED_INPUT_PATTERN).reg
 // ── LLM output (JSON Output of DeepSeek) ─────────────────────────────────────────────────────────────────
 
 const plainText = (maxLength: number) =>
-  z.string().trim().min(1).max(maxLength).refine(hasNoIpa, { message: 'ipa' });
+  z.string().trim().min(1).max(maxLength).refine(hasNoIpa, { message: SCHEMA_ISSUE.ipa });
 
 const phoneticText = (maxLength: number) => plainText(maxLength).regex(PHONETIC_PATTERN);
 
@@ -50,7 +76,7 @@ const llmPartSchema = z
     explanation: plainText(PRONUNCIATION_LIMITS.explanationMaxLength),
   })
   .refine((part) => UPPERCASE_PATTERN.test(part.syllable) === part.stressed, {
-    message: 'stress_case',
+    message: SCHEMA_ISSUE.stressCase,
     path: ['syllable'],
   });
 
@@ -61,14 +87,17 @@ export const llmPronunciationSchema = z.object({
     .array(llmPartSchema)
     .min(1)
     .max(PRONUNCIATION_LIMITS.maxParts)
-    .refine((parts) => parts.some((part) => part.stressed), { message: 'no_stress' }),
+    .refine((parts) => parts.some((part) => part.stressed), { message: SCHEMA_ISSUE.noStress }),
   example: z.string().transform(stripWrappingQuotes).pipe(plainText(PRONUNCIATION_LIMITS.exampleMaxLength)),
 });
 
 export const llmOutOfScopeSchema = z.object({ status: z.literal(RESULT_STATUS.outOfScope) });
 
 // z.object (not strict): extra keys the model may add are dropped.
-export const llmResultSchema = z.discriminatedUnion('status', [llmPronunciationSchema, llmOutOfScopeSchema]);
+export const llmResultSchema = z.preprocess(
+  toSinglePartStress,
+  z.discriminatedUnion('status', [llmPronunciationSchema, llmOutOfScopeSchema]),
+);
 
 // ── DeepSeek envelope (only what is read; finish_reason and model are open strings on purpose) ───────────
 
