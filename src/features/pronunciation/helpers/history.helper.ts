@@ -8,7 +8,13 @@ import {
   MS_PER_DAY,
 } from '../constants/history.constants';
 import { INPUT_LIMITS } from '../constants/pronunciation.constants';
-import type { HistoryEntry, HistoryItemData, HistoryItemsContext } from '../types/history.types';
+import type { Lang } from '@/shared/types/i18n.types';
+import type {
+  HistoryDateFormatter,
+  HistoryEntry,
+  HistoryItemData,
+  HistoryItemsContext,
+} from '../types/history.types';
 import { normalizeWord } from './pronunciation.helper';
 
 // Case-insensitive: "Delivered" and "delivered" are the same entry. Unique both when a word is added and
@@ -59,29 +65,39 @@ export function canToggleHistory(entries: readonly HistoryEntry[]): boolean {
 export function toHistoryItems(entries: readonly HistoryEntry[], context: HistoryItemsContext): HistoryItemData[] {
   const visible = context.isExpanded ? entries : entries.slice(0, HISTORY_LIMITS.preview);
   const currentKey = context.currentWord === undefined ? undefined : toHistoryKey(context.currentWord);
+  const formatDate = createDateFormatter(context.lang);
   return visible.map((entry) => ({
     id: toHistoryKey(entry.word),
     word: entry.word,
-    timeLabel: formatHistoryTime(entry.askedAt, context),
+    timeLabel: formatHistoryTime(entry.askedAt, context, formatDate),
     isActive: toHistoryKey(entry.word) === currentKey,
   }));
 }
 
+// The list is rebuilt on every keystroke and every tick, and building an Intl.DateTimeFormat is what that
+// costs: one per format per call, created only when an entry needs it, instead of one or two per entry.
+function createDateFormatter(lang: Lang): HistoryDateFormatter {
+  const formatters = new Map<Intl.DateTimeFormatOptions, Intl.DateTimeFormat>();
+  return (timestamp, options) => {
+    const formatter = formatters.get(options) ?? new Intl.DateTimeFormat(LANG_TAGS[lang], options);
+    formatters.set(options, formatter);
+    return formatter.format(timestamp);
+  };
+}
+
 // "Hoy, 12:34 p. m." / "Today, 12:34 PM"; older than yesterday shows the date.
-function formatHistoryTime(askedAt: number, context: HistoryItemsContext): string {
-  const time = new Intl.DateTimeFormat(LANG_TAGS[context.lang], HISTORY_TIME_FORMAT).format(askedAt);
-  return interpolate(context.texts.timeLabel, { day: toDayLabel(askedAt, context), time });
+function formatHistoryTime(askedAt: number, context: HistoryItemsContext, formatDate: HistoryDateFormatter): string {
+  const time = formatDate(askedAt, HISTORY_TIME_FORMAT);
+  return interpolate(context.texts.timeLabel, { day: toDayLabel(askedAt, context, formatDate), time });
 }
 
 // Local calendar days and years. A timestamp from the future (the clock moved back) still reads as today.
-function toDayLabel(askedAt: number, { now, lang, texts }: HistoryItemsContext): string {
+function toDayLabel(askedAt: number, { now, texts }: HistoryItemsContext, formatDate: HistoryDateFormatter): string {
   const days = Math.round((startOfDay(now) - startOfDay(askedAt)) / MS_PER_DAY);
   if (days <= 0) return texts.today;
   if (days === 1) return texts.yesterday;
   const sameYear = new Date(askedAt).getFullYear() === new Date(now).getFullYear();
-  return new Intl.DateTimeFormat(LANG_TAGS[lang], sameYear ? HISTORY_DATE_FORMAT : HISTORY_DATE_WITH_YEAR_FORMAT).format(
-    askedAt,
-  );
+  return formatDate(askedAt, sameYear ? HISTORY_DATE_FORMAT : HISTORY_DATE_WITH_YEAR_FORMAT);
 }
 
 // Rounding the difference absorbs the 23/25-hour days of a DST change.

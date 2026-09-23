@@ -33,7 +33,7 @@ export function usePronunciationRequest(): PronunciationRequestController {
       const clientId = getClientId();
       const response = await requestPronunciation({ word, lang, clientId }, { signal: controller.signal });
       // Shown before it is saved, on both paths: a storage error must not hide an answer or lock the form.
-      dispatch({ type: REQUEST_ACTION.succeed, word, result: response.result });
+      dispatch({ type: REQUEST_ACTION.succeed, word, result: response.result, rateLimit: response.rateLimit });
       saveSafely(() => saveAnswer(response));
     } catch (error) {
       const failure = toPronunciationFailure(error);

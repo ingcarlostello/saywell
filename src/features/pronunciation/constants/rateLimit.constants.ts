@@ -38,6 +38,8 @@ export const RATE_LIMIT_TEXTS = {
     exhausted: 'Espera {minutes} min para volver a consultar',
     infoLabel: 'Cómo funciona el límite de consultas',
     infoText: 'Puedes hacer {limit} consultas por hora. La hora empieza a contar con tu primera consulta.',
+    // States the result, not the cause: the 90/h ceiling of a shared IP can empty it before the user's 30.
+    announceSpent: 'Ya no te quedan consultas esta hora.',
   },
   en: {
     remaining: {
@@ -47,5 +49,6 @@ export const RATE_LIMIT_TEXTS = {
     exhausted: 'Wait {minutes} min before asking again',
     infoLabel: 'How the query limit works',
     infoText: 'You can make {limit} queries per hour. The hour starts counting with your first query.',
+    announceSpent: 'You have no queries left this hour.',
   },
 } as const satisfies Localized<RateLimitTexts>;

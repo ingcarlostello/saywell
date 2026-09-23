@@ -59,11 +59,13 @@ export const PRONUNCIATION_TEXTS = {
     hero: {
       title: { before: 'Mejora tu pronunciación en ', highlight: 'inglés', after: '' },
       subtitle: 'Escribe una palabra o frase y descubre cómo se pronuncia en inglés americano, explicado en español.',
-      note: 'Habla mejor, con más confianza',
+      note: 'Habla mejor,\ncon más confianza',
     },
     form: {
       field: 'Palabra o frase en inglés',
-      placeholder: 'Escribe una palabra o frase en inglés',
+      // English in both languages: the field is lang="en-US", and the Spanish instruction lives in the
+      // sr-only label and the hero. Short enough for a 320 px phone.
+      placeholder: 'good morning',
       clear: 'Borrar texto',
       counter: '{length} de {max} caracteres',
       submit: 'Pronunciar',
@@ -77,8 +79,9 @@ export const PRONUNCIATION_TEXTS = {
       listen: 'Escuchar',
       retry: 'Reintentar',
       announceLoading: 'Buscando la pronunciación…',
-      announceReady: 'Pronunciación lista',
+      announceReady: 'Pronunciación lista.',
       announceNotice: '{title}. {message}',
+      announceWithQuota: '{message} {quota}',
     },
     notices: {
       outOfScope: {
@@ -111,11 +114,11 @@ export const PRONUNCIATION_TEXTS = {
     hero: {
       title: { before: 'Improve your ', highlight: 'English', after: ' pronunciation' },
       subtitle: 'Type a word or phrase and find out how it is pronounced in American English, explained in plain English.',
-      note: 'Speak better, with more confidence',
+      note: 'Speak better,\nwith more confidence',
     },
     form: {
       field: 'English word or phrase',
-      placeholder: 'Type an English word or phrase',
+      placeholder: 'good morning',
       clear: 'Clear text',
       counter: '{length} of {max} characters',
       submit: 'Pronounce',
@@ -129,8 +132,9 @@ export const PRONUNCIATION_TEXTS = {
       listen: 'Listen',
       retry: 'Try again',
       announceLoading: 'Looking up the pronunciation…',
-      announceReady: 'Pronunciation ready',
+      announceReady: 'Pronunciation ready.',
       announceNotice: '{title}. {message}',
+      announceWithQuota: '{message} {quota}',
     },
     notices: {
       outOfScope: {

@@ -50,6 +50,8 @@
   --pill-emerald: oklch(0.95 0.051 163.1);
   --pill-emerald-foreground: oklch(0.432 0.086 166.9);
   --page-gutter: 1rem;
+  /* Height of the sticky header's row: AppHeader and html's scroll-padding-top both read it */
+  --header-row: 4rem;
 }
 
 /* Dark theme: colors measured on context/projectUI.png */
@@ -96,6 +98,7 @@
 @media (width >= 40rem) {
   :root {
     --page-gutter: 1.5rem;
+    --header-row: 5rem;
   }
 }
 
@@ -179,6 +182,9 @@
   html {
     background-color: var(--background);
     -webkit-tap-highlight-color: transparent;
+    /* A control focused under the sticky header scrolls clear of it (WCAG 2.4.11): row + 1px border +
+       iOS status bar, plus room for the focus ring */
+    scroll-padding-top: calc(var(--header-row) + 1px + env(safe-area-inset-top) + 0.5rem);
   }
 
   body {

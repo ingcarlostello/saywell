@@ -43,7 +43,8 @@ import type {
   ShownFailure,
   SyllableView,
 } from '../types/pronunciation.types';
-import type { RateLimitStatus } from '../types/rateLimit.types';
+import type { RateLimitStatus, RateLimitTexts } from '../types/rateLimit.types';
+import { toQuotaAnnouncement } from './rateLimit.helper';
 
 // ── The word the user types ──────────────────────────────────────────────────────────────────────────────
 
@@ -124,7 +125,13 @@ export function pronunciationRequestReducer(
       return { status: REQUEST_STATUS.loading, word: action.word, lang: action.lang };
     case REQUEST_ACTION.succeed:
       if (!isInFlight(state, action.word)) return state;
-      return { status: REQUEST_STATUS.ready, word: action.word, lang: state.lang, result: action.result };
+      return {
+        status: REQUEST_STATUS.ready,
+        word: action.word,
+        lang: state.lang,
+        result: action.result,
+        rateLimit: action.rateLimit,
+      };
     case REQUEST_ACTION.fail:
       if (!isInFlight(state, action.word)) return state;
       return { status: REQUEST_STATUS.failed, word: action.word, failure: action.failure };
@@ -225,9 +232,23 @@ function toUnstressedVariant(position: number): BadgeVariant {
   return UNSTRESSED_SYLLABLE_VARIANTS[position % UNSTRESSED_SYLLABLE_VARIANTS.length] ?? UNSTRESSED_SYLLABLE_VARIANTS[0];
 }
 
-// What the single LiveRegion reads. The 429 notice (the only warning) announces its title alone: its message
-// carries a countdown that would be re-read on every tick.
-export function toAnnouncement(view: PronunciationResultView, texts: ResultTexts): string {
+// The quota note of the answer on screen. Only a 200 counted by the server carries a snapshot (`ok` and the
+// model's own `out_of_scope`): the 422 prefilter, the 429 and the failures spent nothing and say nothing.
+export function toAnswerQuotaNote(state: PronunciationRequestState, lang: Lang, texts: RateLimitTexts): string | undefined {
+  return state.status === REQUEST_STATUS.ready ? toQuotaAnnouncement(state.rateLimit, lang, texts) : undefined;
+}
+
+// What the single LiveRegion reads. A nearly or fully spent quota is a status message too (WCAG 4.1.3): it is
+// said with the answer that spent it, so a screen reader user learns why the button is now unavailable. The
+// note is frozen with that answer, so the string only changes when something new happens.
+export function toAnnouncement(view: PronunciationResultView, texts: ResultTexts, quotaNote: string | undefined): string {
+  const message = toViewAnnouncement(view, texts);
+  return quotaNote === undefined ? message : interpolate(texts.announceWithQuota, { message, quota: quotaNote });
+}
+
+// The 429 notice (the only warning) announces its title alone: its message carries a countdown that would be
+// re-read on every tick.
+function toViewAnnouncement(view: PronunciationResultView, texts: ResultTexts): string {
   switch (view.kind) {
     case RESULT_VIEW.idle:
       return '';
