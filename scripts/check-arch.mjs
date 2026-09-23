@@ -118,6 +118,49 @@ if (!darkColor || !lightColor) {
   }
 }
 
+// 7b · Limits duplicated across the api/ ↔ src/ contract (`// CONTRACT:` on both sides). Also fails closed:
+// the key must appear exactly once in the `export const` block and hold a plain integer literal, so an
+// expression such as `60 * MS_PER_MINUTE` is an error instead of being read as 60.
+const apiConstantsFile = 'api/_lib/pronounce.constants.ts';
+const apiConstants = readFileSync(apiConstantsFile, 'utf8');
+const readIntegerLiteral = (text, declaration, key) => {
+  const block = new RegExp(String.raw`^export const ${declaration}\s*=\s*\{([^}]*)\}`, 'm').exec(text ?? '')?.[1];
+  if (block === undefined) return undefined;
+  const code = block.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  const values = [...code.matchAll(new RegExp(String.raw`(?:^|[\s{,])${key}\s*:\s*([^,\n}]*)`, 'g'))];
+  const raw = values.length === 1 ? values[0][1].trim() : undefined;
+  if (raw === undefined || !/^\d[\d_]*$/.test(raw)) return undefined;
+  const value = Number(raw.replaceAll('_', ''));
+  return Number.isSafeInteger(value) ? value : undefined;
+};
+const CONTRACT_LIMITS = [
+  {
+    name: 'longitud máxima de la palabra',
+    api: ['INPUT', 'wordMaxLength'],
+    file: 'src/features/pronunciation/constants/pronunciation.constants.ts',
+    client: ['INPUT_LIMITS', 'maxLength'],
+  },
+  {
+    name: 'consultas por hora',
+    api: ['RATE_LIMIT', 'clientLimit'],
+    file: 'src/features/pronunciation/constants/rateLimit.constants.ts',
+    client: ['RATE_LIMIT_DEFAULTS', 'limit'],
+  },
+  {
+    name: 'ventana del rate limit',
+    api: ['RATE_LIMIT', 'windowMs'],
+    file: 'src/features/pronunciation/constants/rateLimit.constants.ts',
+    client: ['RATE_LIMIT_DEFAULTS', 'windowMs'],
+  },
+];
+for (const { name, api, file, client } of CONTRACT_LIMITS) {
+  const apiValue = readIntegerLiteral(apiConstants, ...api);
+  const clientValue = readIntegerLiteral(source.get(file), ...client);
+  if (apiValue === undefined) fail(`sync contrato: ${name}`, apiConstantsFile, `no se pudo leer ${api.join('.')}`);
+  else if (clientValue === undefined) fail(`sync contrato: ${name}`, file, `no se pudo leer ${client.join('.')}`);
+  else if (apiValue !== clientValue) fail(`sync contrato: ${name}`, file, `${clientValue} ≠ ${apiValue} en ${apiConstantsFile}`);
+}
+
 // 8 · Every component folder matches its file name (§4.2)
 for (const f of files) {
   if (!/\/(components|shared\/ui)\/.+\/[^/]+\.tsx?$/.test(f)) continue;

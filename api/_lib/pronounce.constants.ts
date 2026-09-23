@@ -59,6 +59,8 @@ export const ERROR_CODE = {
   internalError: 'internal_error',
 } as const;
 
+// CONTRACT: src/features/pronunciation/constants/pronunciation.constants.ts (INPUT_LIMITS.maxLength) mirrors
+// wordMaxLength; scripts/check-arch.mjs fails if they drift apart.
 export const INPUT = {
   maxBodyBytes: 1024,
   wordMaxLength: 50,
@@ -135,6 +137,8 @@ export const JSON_RESPONSE_FORMAT = { type: 'json_object' } as const;
 
 export const MESSAGE_ROLE = { system: 'system', user: 'user' } as const;
 
+// CONTRACT: src/features/pronunciation/constants/rateLimit.constants.ts (RATE_LIMIT_DEFAULTS) mirrors
+// clientLimit and windowMs; scripts/check-arch.mjs fails if they drift apart.
 export const RATE_LIMIT = {
   clientLimit: 30,
   ipLimit: 90,
